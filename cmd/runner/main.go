@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"net"
@@ -21,6 +23,18 @@ const (
 	defaultConfigFile = "/config/wg0.conf"
 	interfaceName     = "wg0"
 )
+
+func toHex(base64Str string) string {
+	base64Str = strings.TrimSpace(base64Str)
+	if base64Str == "" {
+		return ""
+	}
+	keyBytes, err := base64.StdEncoding.DecodeString(base64Str)
+	if err != nil {
+		log.Fatalf("Failed to decode Key from Base64: %v", err)
+	}
+	return hex.EncodeToString(keyBytes)
+}
 
 func main() {
 	configFile := os.Getenv("WG_CONFIG_FILE")
@@ -91,7 +105,7 @@ func main() {
 	var uapiBuilder strings.Builder
 
 	// Interface Config
-	uapiBuilder.WriteString(fmt.Sprintf("private_key=%s\n", privateKey))
+	uapiBuilder.WriteString(fmt.Sprintf("private_key=%s\n", toHex(privateKey)))
 	uapiBuilder.WriteString(fmt.Sprintf("listen_port=%d\n", listenPort))
 	if fwMark != 0 {
 		uapiBuilder.WriteString(fmt.Sprintf("fwmark=%d\n", fwMark))
@@ -135,9 +149,9 @@ func main() {
 			keepalive := section.Key("PersistentKeepalive").MustInt(0)
 			allowedIPs := section.Key("AllowedIPs").Strings(",")
 
-			uapiBuilder.WriteString(fmt.Sprintf("public_key=%s\n", pubKey))
+			uapiBuilder.WriteString(fmt.Sprintf("public_key=%s\n", toHex(pubKey)))
 			if presharedKey != "" {
-				uapiBuilder.WriteString(fmt.Sprintf("preshared_key=%s\n", presharedKey))
+				uapiBuilder.WriteString(fmt.Sprintf("preshared_key=%s\n", toHex(presharedKey)))
 			}
 			if endpoint != "" {
 				uapiBuilder.WriteString(fmt.Sprintf("endpoint=%s\n", endpoint))
