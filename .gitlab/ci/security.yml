@@ -1,19 +1,23 @@
 trivy_scanning:
   stage: security
   image:
-    name: docker:24.0.5
-  services:
-    - name: docker:24.0.5-dind
-      entrypoint: [""]
-  dependencies:
-    - build
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  variables:
+    TRIVY_USERNAME: "$CI_REGISTRY_USER"
+    TRIVY_PASSWORD: "$CI_REGISTRY_PASSWORD"
+    TRIVY_NO_PROGRESS: "true"
+    TRIVY_CACHE_DIR: ".trivycache/"
   script:
     # 1. Generate report for GitLab Dashboard (exit code 0)
-    - trivy image --input image.tar --format template --template "@/contrib/gitlab.tpl" -o gl-container-scanning-report.json
+    - trivy image --exit-code 0 --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL --format template --template "@/contrib/gitlab.tpl" -o gl-container-scanning-report.json $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
     # 2. Generate SBOM (CycloneDX)
-    - trivy image --input image.tar --format cyclonedx --output gl-sbom-report.cdx.json
+    - trivy image --exit-code 0 --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL --format cyclonedx --output gl-sbom-report.cdx.json $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
     # 3. Print results to console and fail on Critical/High (exit code 1)
-    - trivy image --input image.tar --exit-code 1 --severity CRITICAL,HIGH
+    - trivy image --exit-code 1 --severity CRITICAL,HIGH $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  cache:
+    paths:
+      - .trivycache/
   artifacts:
     when: always
     reports:
