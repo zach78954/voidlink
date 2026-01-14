@@ -10,6 +10,10 @@ include:
   - local: "/.gitlab/ci/security.yml"
   - local: "/.gitlab/ci/release.yml"
   - template: Security/SAST.gitlab-ci.yml
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+
+variables:
+  GITLAB_ADVANCED_SAST_ENABLED: "true"
 
 sast:
   stage: security
