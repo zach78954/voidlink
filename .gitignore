@@ -6,7 +6,8 @@
 bin/
 
 # Test/Debug
-runner
+# runner (binary name) - commented out to allow cmd/runner, relying on specific binary ignores
+# runner
 amneziawg-go
 *.test
 *.out
