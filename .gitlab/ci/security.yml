@@ -1,8 +1,12 @@
-trivy_scan:
+trivy_scanning:
   stage: security
   image:
-    name: aquasec/trivy:latest
-    entrypoint: [""]
+    name: docker:24.0.5
+    pull_policy: if-not-present
+  services:
+    - name: docker:24.0.5-dind
+      pull_policy: if-not-present
+      entrypoint: [""]
   dependencies:
     - build
   script:

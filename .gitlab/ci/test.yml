@@ -1,8 +1,11 @@
 test_integration:
   stage: test
-  image: docker:24.0.5
+  image:
+    name: docker:24.0.5
+    pull_policy: if-not-present
   services:
-    - docker:24.0.5-dind
+    - name: docker:24.0.5-dind
+      pull_policy: if-not-present
   dependencies:
     - build
   variables:
@@ -10,7 +13,8 @@ test_integration:
     DOCKER_TLS_CERTDIR: ""
   script:
     - |
-      docker load -i image.tar
+      docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+      docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
 
       # Generate a dummy config for testing
       mkdir -p configs
