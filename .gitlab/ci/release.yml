@@ -1,11 +1,8 @@
 gl_release:
   stage: release
-  image:
-    name: docker:24.0.5
-    pull_policy: if-not-present
+  image: docker:24.0.5
   services:
-    - name: docker:24.0.5-dind
-      pull_policy: if-not-present
+    - docker:24.0.5-dind
   variables:
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
@@ -22,12 +19,9 @@ gl_release:
 
 gh_release:
   stage: release
-  image:
-    name: docker:24.0.5
-    pull_policy: if-not-present
+  image: docker:24.0.5
   services:
-    - name: docker:24.0.5-dind
-      pull_policy: if-not-present
+    - docker:24.0.5-dind
   variables:
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
