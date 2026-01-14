@@ -21,6 +21,7 @@ test_integration:
       echo "Jc = 5" >> configs/wg0.conf
       echo "Jmin = 50" >> configs/wg0.conf
       echo "Jmax = 1000" >> configs/wg0.conf
+      chown 65532:65532 configs/wg0.conf
       chmod 600 configs/wg0.conf
 
       # Run container with NET_ADMIN to verify it starts and processes config
