@@ -1,4 +1,4 @@
-FROM cgr.dev/chainguard/go:latest as builder
+FROM --platform=$BUILDPLATFORM cgr.dev/chainguard/go:latest as builder
 
 WORKDIR /app
 
@@ -8,7 +8,9 @@ RUN go mod download
 
 # Copy source code and build
 COPY . .
-RUN CGO_ENABLED=0 go build -o /usr/bin/amneziawg-go ./cmd/runner
+ARG TARGETOS
+ARG TARGETARCH
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /usr/bin/amneziawg-go ./cmd/runner
 
 # Runtime stage
 # We use wolfi-base to allow installing packages (iproute2) while keeping it minimal.
