@@ -5,17 +5,15 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
-	"net"
 	"os"
-	"os/exec"
 	"os/signal"
-	"strconv"
 	"strings"
 	"syscall"
 
 	"github.com/amnezia-vpn/amneziawg-go/conn"
 	"github.com/amnezia-vpn/amneziawg-go/device"
 	"github.com/amnezia-vpn/amneziawg-go/tun"
+	"github.com/vishvananda/netlink"
 	"gopkg.in/ini.v1"
 )
 
@@ -172,37 +170,39 @@ func main() {
 		log.Fatalf("Failed to apply configuration: %v", err)
 	}
 
-	// 7. Configure System Networking (IP Addresses and Link Up)
-	// We use the 'ip' command, assuming 'iproute2' is installed in the Wolfi image.
+	// 7. Configure System Networking using Netlink (Native Go)
+	// This avoids "Operation not permitted" errors with child processes needing capabilities.
 
-	// Set MTU (redundant as CreateTUN handles it, but good practice to sync)
-	exec.Command("ip", "link", "set", "mtu", strconv.Itoa(mtu), "dev", interfaceName).Run()
+	// Get Link
+	link, err := netlink.LinkByName(interfaceName)
+	if err != nil {
+		log.Fatalf("Failed to get link %s: %v", interfaceName, err)
+	}
 
-	// Add Addresses with validation
+	// Set MTU
+	if err := netlink.LinkSetMTU(link, mtu); err != nil {
+		log.Fatalf("Failed to set MTU: %v", err)
+	}
+
+	// Add Addresses
 	for _, addr := range addresses {
 		addr = strings.TrimSpace(addr)
 
-		// Validate IP/CIDR format to prevent command injection
-		_, _, err := net.ParseCIDR(addr)
+		// Parse CIDR
+		ipNet, err := netlink.ParseIPNet(addr)
 		if err != nil {
 			log.Fatalf("Invalid address format %s: %v", addr, err)
 		}
 
 		log.Printf("Adding address: %s", addr)
-		cmd := exec.Command("ip", "address", "add", addr, "dev", interfaceName)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		if err := cmd.Run(); err != nil {
+		if err := netlink.AddrAdd(link, &netlink.Addr{IPNet: ipNet}); err != nil {
 			log.Fatalf("Failed to add address %s: %v", addr, err)
 		}
 	}
 
 	// Bring Interface Up
 	log.Println("Bringing interface up...")
-	cmd := exec.Command("ip", "link", "set", "up", "dev", interfaceName)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
+	if err := netlink.LinkSetUp(link); err != nil {
 		log.Fatalf("Failed to set link up: %v", err)
 	}
 
