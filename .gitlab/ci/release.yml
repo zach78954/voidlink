@@ -1,24 +1,42 @@
-release_latest:
+gl_release:
   stage: release
   image: docker:24.0.5
   services:
     - docker:24.0.5-dind
-  dependencies:
-    - build
   variables:
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
-    DEST_REGISTRY: "gcr.dontfail.net"
   script:
-    - docker load -i image.tar
-    # Use GitLab Job Token for authentication (works if DEST_REGISTRY is on this GitLab instance)
-    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $DEST_REGISTRY
-    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $DEST_REGISTRY/$CI_PROJECT_PATH:latest
-    - docker push $DEST_REGISTRY/$CI_PROJECT_PATH:latest
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker buildx imagetools create -t $CI_REGISTRY_IMAGE:latest $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
     - |
       if [ -n "$CI_COMMIT_TAG" ]; then
-        docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $DEST_REGISTRY/$CI_PROJECT_PATH:$CI_COMMIT_TAG
-        docker push $DEST_REGISTRY/$CI_PROJECT_PATH:$CI_COMMIT_TAG
+        docker buildx imagetools create -t $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+      fi
+  only:
+    - main
+    - tags
+
+gh_release:
+  stage: release
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    - |
+      if [ -z "$GITHUB_USER" ] || [ -z "$GITHUB_TOKEN" ]; then
+        echo "GITHUB_USER or GITHUB_TOKEN not set. Skipping GitHub release."
+        exit 0
+      fi
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_USER" --password-stdin
+    - docker buildx imagetools create -t ghcr.io/$GITHUB_USER/voidlink:latest $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - |
+      if [ -n "$CI_COMMIT_TAG" ]; then
+        docker buildx imagetools create -t ghcr.io/$GITHUB_USER/voidlink:$CI_COMMIT_TAG $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
       fi
   only:
     - main

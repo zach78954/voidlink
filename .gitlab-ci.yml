@@ -11,6 +11,7 @@ include:
   - local: "/.gitlab/ci/test.yml"
   - local: "/.gitlab/ci/security.yml"
   - local: "/.gitlab/ci/release.yml"
+  - local: "/.gitlab/ci/mirror.yml"
   - template: Security/SAST.gitlab-ci.yml
   - template: Jobs/Secret-Detection.gitlab-ci.yml
 
