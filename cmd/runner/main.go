@@ -34,6 +34,27 @@ func toHex(base64Str string) string {
 	return hex.EncodeToString(keyBytes)
 }
 
+func getSecret(envName string, fallback string) string {
+	// 1. Check Env Var
+	val := os.Getenv(envName)
+	if val != "" {
+		return val
+	}
+	// 2. Check File (_FILE)
+	fileVar := envName + "_FILE"
+	valFile := os.Getenv(fileVar)
+	if valFile != "" {
+		content, err := os.ReadFile(valFile)
+		if err != nil {
+			log.Printf("Warning: Could not read secret file %s: %v", valFile, err)
+		} else {
+			return strings.TrimSpace(string(content))
+		}
+	}
+	// 3. Fallback to existing value (from config)
+	return fallback
+}
+
 func main() {
 	configFile := os.Getenv("WG_CONFIG_FILE")
 	if configFile == "" {
@@ -60,24 +81,9 @@ func main() {
 
 	// 2. Extract Interface params for UAPI and System setup
 	ifaceSection := cfg.Section("Interface")
-	// Extract Private Key (Precedence: Env Var > Env File > Config File)
-	privateKey := os.Getenv("WG_PRIVATE_KEY")
-	if privateKey == "" {
-		keyFile := os.Getenv("WG_PRIVATE_KEY_FILE")
-		if keyFile != "" {
-			content, err := os.ReadFile(keyFile)
-			if err != nil {
-				log.Printf("Create warning: Could not read key file %s: %v", keyFile, err)
-			} else {
-				privateKey = strings.TrimSpace(string(content))
-			}
-		}
-	}
-	// Fallback to config file
-	if privateKey == "" {
-		privateKey = ifaceSection.Key("PrivateKey").String()
-	}
 
+	// PrivateKey: Env > File > Config
+	privateKey := getSecret("WG_PRIVATE_KEY", ifaceSection.Key("PrivateKey").String())
 	listenPort := ifaceSection.Key("ListenPort").MustInt(51820)
 	fwMark := ifaceSection.Key("FwMark").MustInt(0)
 	addresses := ifaceSection.Key("Address").Strings(",")
@@ -158,8 +164,12 @@ func main() {
 	// Peers Config
 	for _, section := range cfg.Sections() {
 		if section.Name() == "Peer" {
-			pubKey := section.Key("PublicKey").String()
-			presharedKey := section.Key("PresharedKey").String()
+			// PublicKey: Env > File > Config
+			pubKey := getSecret("WG_PEER_PUBLIC_KEY", section.Key("PublicKey").String())
+
+			// PresharedKey: Env > File > Config
+			presharedKey := getSecret("WG_PRESHARED_KEY", section.Key("PresharedKey").String())
+
 			endpoint := section.Key("Endpoint").String()
 			keepalive := section.Key("PersistentKeepalive").MustInt(0)
 			allowedIPs := section.Key("AllowedIPs").Strings(",")
