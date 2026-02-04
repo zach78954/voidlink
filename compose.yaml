@@ -2,10 +2,16 @@ services:
   voidlink:
     image: gcr.dontfail.net/apps/voidlink:latest
     container_name: voidlink
+    healthcheck:
+      test: ["CMD-SHELL", "ip link show wg0 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
     cap_add:
       - NET_ADMIN
-    devices:
-      - /dev/net/tun:/dev/net/tun
+    # devices:
+    #   - /dev/net/tun:/dev/net/tun
     ports:
       - "51820:51820/udp"
     volumes:
@@ -28,3 +34,4 @@ services:
       # NET_ADMIN capability usually handles internal stack, but enabling forwarding is critical.
       # In rootless Podman, this may be ignored or require specific host configuration.
       - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
