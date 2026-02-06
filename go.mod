@@ -1,4 +1,4 @@
-module voidlink
+module github.com/zach78954/voidlink
 
 go 1.25.5
 

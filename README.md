@@ -1,4 +1,4 @@
-# Distroless AmneziaWG-Go on Wolfi
+# Voidlink
 
 This project provides a secure, minimal, and distroless container image for running [AmneziaWG](https://github.com/amnezia-vpn/amneziawg-go) (a WireGuard fork with obfuscation). It is built on top of [Chainguard Wolfi](https://edu.chainguard.dev/open-source/wolfi/overview/) and uses a custom Go runner to handle configuration natively.
 
@@ -45,7 +45,7 @@ This project provides a secure, minimal, and distroless container image for runn
       --device=/dev/net/tun \
       -v $(pwd)/wg0.conf:/config/wg0.conf:ro \
       -p 51820:51820/udp \
-      gcr.dontfail.net/apps/voidlink:latest
+      $$IMAGE_NAME$$
     ```
 
 3.  **Run with Podman (Rootless)**:
@@ -94,7 +94,7 @@ chmod 600 wg0.conf
 ```yaml
 services:
   amneziawg:
-    image: gcr.dontfail.net/apps/voidlink:latest
+    image: $$IMAGE_NAME$$
     secrets:
       - wg0_config
     command: ["/config/wg0.conf"]
@@ -154,7 +154,7 @@ docker run -d \
   --read-only \
   --security-opt=no-new-privileges \
   -v $(pwd)/wg0.conf:/config/wg0.conf:ro \
-  gcr.dontfail.net/apps/voidlink:latest
+  $$IMAGE_NAME$$
 ```
 
 ### 5. Updates & Scanning
@@ -177,9 +177,10 @@ docker run -d \
 go build ./cmd/runner
 ```
 
-### CI/CD
-The project uses GitLab CI with the following stages:
-- **Build**: Creates Docker image.
-- **Test**: Runs integration tests using Docker-in-Docker.
-- **Security**: Scans image with Trivy.
-- **Release**: Pushes to `gcr.dontfail.net`.
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
