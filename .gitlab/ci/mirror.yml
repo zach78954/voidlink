@@ -12,5 +12,5 @@ mirror_to_github:
     - echo "Mirroring to GitHub..."
     - git remote add github https://$GITHUB_USER:$GITHUB_TOKEN@$GITHUB_REPO
     - git fetch --unshallow origin || git fetch origin # Ensure we have history
-    - git push --force github HEAD:$CI_COMMIT_REF_NAME
+    - git push --force github HEAD:refs/heads/$CI_COMMIT_REF_NAME
   allow_failure: true

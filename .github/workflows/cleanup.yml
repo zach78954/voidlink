@@ -1,0 +1,20 @@
+name: GHCR Cleanup
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Run daily at midnight
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  delete-old-versions:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Delete old package versions
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: "voidlink"
+          package-type: "container"
+          min-versions-to-keep: 7
+          delete-only-untagged-versions: "false"
