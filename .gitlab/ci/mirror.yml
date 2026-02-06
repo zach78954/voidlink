@@ -9,14 +9,15 @@ mirror_to_github:
         echo "GitHub credentials (GITHUB_REPO, GITHUB_USER, GITHUB_TOKEN) not set. Skipping mirror."
         exit 0
       fi
-    - git remote add github https://$GITHUB_USER:$GITHUB_TOKEN@$GITHUB_REPO
-    - git fetch --unshallow origin || git fetch origin # Ensure we have history
-    - |
+      git remote add github https://$GITHUB_USER:$GITHUB_TOKEN@$GITHUB_REPO
+      git fetch --unshallow origin || git fetch origin # Ensure we have history
+
       IMAGE_NAME=$(echo "ghcr.io/$GITHUB_USER/voidlink" | tr '[:upper:]' '[:lower:]')
       sed -i "s|\$\$IMAGE_NAME\$\$|$IMAGE_NAME:latest|g" README.md
-    - git config user.name "GitLab CI"
-    - git config user.email "ci@gitlab.dontfail.us"
-    - git add README.md
-    - git commit -m "docs: bake image name for GitHub release"
-    - git push --force github HEAD:refs/heads/$CI_COMMIT_REF_NAME
+
+      git config user.name "GitLab CI"
+      git config user.email "ci@gitlab.dontfail.us"
+      git add README.md
+      git commit -m "docs: bake image name for GitHub release" || echo "No changes to README"
+      git push --force github HEAD:refs/heads/$CI_COMMIT_REF_NAME
   allow_failure: true
