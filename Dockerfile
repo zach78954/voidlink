@@ -18,6 +18,8 @@ FROM cgr.dev/chainguard/wolfi-base:latest
 
 LABEL org.opencontainers.image.source = "$$REPO_URL$$"
 LABEL org.opencontainers.image.licenses = "MIT"
+LABEL org.opencontainers.image.title = "voidlink"
+LABEL org.opencontainers.image.description = "Secure, minimal, and distroless container image for running AmneziaWG (a WireGuard fork with obfuscation)"
 
 # Install iproute2 for 'ip' command support and libcap-utils for setting capabilities
 RUN apk add --no-cache iproute2 libcap-utils
