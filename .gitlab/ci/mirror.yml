@@ -13,7 +13,7 @@ mirror_to_github:
     - git fetch --unshallow origin || git fetch origin # Ensure we have history
     - |
       IMAGE_NAME=$(echo "ghcr.io/$GITHUB_USER/voidlink" | tr '[:upper:]' '[:lower:]')
-      sed -i "s/\$\$IMAGE_NAME\$\$/$IMAGE_NAME:latest/g" README.md
+      sed -i "s|\$\$IMAGE_NAME\$\$|$IMAGE_NAME:latest|g" README.md
     - git config user.name "GitLab CI"
     - git config user.email "ci@gitlab.dontfail.us"
     - git add README.md
